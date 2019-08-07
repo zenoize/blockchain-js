@@ -5,7 +5,7 @@ import {formatCoin}     from 'minterjs-tx/src/helpers';
 import MinterApi        from "minter-js-sdk/src/api";
 import PostSignedTx     from 'minter-js-sdk/src/api/post-signed-tx';
 
-import { delay}  from '../../utils/util'
+import { delay } from '../../utils/util'
 import Query     from '../../queryBuilder';
 import MyEmitter from '../../myEmitter';
 import Wrapper   from '../wrapper'
@@ -39,38 +39,26 @@ export default class Minter extends Wrapper {
         const that = this
         return new Promise(async (resolve, reject) => {        
             that.gasPrice = "0x01"
-            that.humanFeeRate = "0.01"
             resolve(true)
         })
     }
 
-    // CURRENTLY RETURN ONLY BIP BALANCE
     getBalance (address, precession) {
         const that = this
         return new Promise(async (resolve, reject) => {
             query.get_json(this.api.getBalance(address))
             .then(res => {
                 const balances = res.data.balances
-                let bip_balance = 0
 
                 for (let i = 0; i < balances.length; i++) {
                     balances[i].amount = Number(balances[i].amount).toFixed(precession)
-                    if (config.network == "testnet") {
-                        if (balances[i].coin == "MNT")
-                            bip_balance = Number(balances[i].amount).toFixed(precession)
-                    }
-                    else if (config.network == "mainnet") {
-                        if (balances[i].coin == "BIP")
-                            bip_balance = Number(balances[i].amount).toFixed(precession)
-                    }
                 }
                 
-                // resolve(balances)
-                resolve(bip_balance)
+                resolve(balances)
             })
             .catch(e => {
-                console.log(e, "error_getting_balance")
-                resolve(0)
+                console.log(e)
+                reject("error_getting_balance")
             })            
         })
     }
@@ -102,57 +90,13 @@ export default class Minter extends Wrapper {
         return new Promise(async(resolve, reject) => {
             query.get_json(this.api.getHistory(address))
             .then(res => {
-                let new_list = res.data.splice(0, 10)
-                let formatedList = []
-
-                for (let i = 0; i < new_list.length; i++) {
-                    if (typeof new_list[i].data.list != "undefined" && new_list[i].data.list.length != 1) {
-                        let obj = new_list[i].data.list
-                        for (let j =0; j < obj.length; j++) {
-                            if (obj[j].to == address) {
-                                new_list[i].data = obj[j]
-                            }
-                        }
-                    }
-                }
-
-                for (let i = 0; i < new_list.length; i++) {
-                    formatedList.push({
-                        hash: new_list[i].hash,
-                        timestamp: new Date(new_list[i].timestamp.replace("Z", "")).toUTCString(),
-                        from: new_list[i].from,
-                        type: this.defineType(new_list[i].type),
-                        data: new_list[i].data,
-                        explorer: this.explorer.transaction(new_list[i].hash)
-                    })
-                }
-
-                resolve(formatedList)
+                resolve(res.data.splice(0, 10))
             })
             .catch(e => {
                 console.log(e)
-                resolve(Array())
+                reject("error_getting_history")
             })
         })
-    }
-
-    defineType (inp) {
-        switch (inp) {
-            case 1: return "Transfer";
-            case 2: return "Sell";
-            case 3: return "Sell all";
-            case 4: return "Buy";
-            case 5: return "Create coin";
-            case 6: return "Declary candidacy";
-            case 7: return "Delegate";
-            case 8: return "Unbond";
-            case 9: return "Redeem check";
-            case 10: return "Set candidate online";
-            case 11: return "Set candidate offline";
-            case 12: return "Create multisig";
-            case 13: return "Multisend";
-            case 14: return "Edit candidate";
-        }
     }
 
     payment (to, value) {
@@ -201,16 +145,12 @@ export default class Minter extends Wrapper {
     submitSigned (tx) {
         const emitter = new MyEmitter()
         const postSignedTx = new PostSignedTx(minterApi);
-        let txHash = ""
 
         postSignedTx(tx)
-        .then(response => {
-            txHash = response
-            return
-        })
-        .then(delay(5000))
-        .then(() => {
-            return query.get_json(this.api.getTransaction(txHash))
+        .then(txHash => {
+            return delay(5000).then(() => {
+                return query.get_json(this.api.getTransaction(txHash))
+            })
         })
         .then(receipt => {
             emitter.emitObject("confirmation", receipt.data)

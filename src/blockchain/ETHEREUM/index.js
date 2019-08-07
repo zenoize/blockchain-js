@@ -32,13 +32,11 @@ export default class Ethereum extends Wrapper {
             query.get_json(this.api.getGasPrice())
             .then(res => {
                 that.gasPrice = that.util.to0xFromNum(JSON.parse(res).safeLow * Math.pow(10, 9))
-                that.humanFeeRate = (that.gasPrice * that.gasLimit) / Math.pow(10, 9)
                 resolve(true)
             })
             .catch(err => {
                 console.log(err)
                 that.gasPrice = "0x2540be400"
-                that.humanFeeRate = (that.gasPrice * that.gasLimit) / Math.pow(10, 9)
                 resolve(true)
             })
         })
@@ -53,8 +51,8 @@ export default class Ethereum extends Wrapper {
                 resolve(Number(val).toFixed(precession))
             })
             .catch(e => {
-                console.log(e, "error_getting_balance")
-                resolve(0)
+                console.log(e)
+                reject("error_getting_balance")
             })
         })
     }
@@ -87,30 +85,11 @@ export default class Ethereum extends Wrapper {
         return new Promise(async(resolve, reject) => {
             query.get_json(this.api.getHistory(address))
             .then(res => {
-
-                const spliced = res.result.splice(0, 10)
-                const result_obj = []
-
-                for (let i = 0; i < spliced.length; i++) {
-                    result_obj.push({
-                        hash: spliced[i].hash,
-                        from: spliced[i].from,
-                        timestamp: new Date(spliced[i].timeStamp*1000).toUTCString(),
-                        data: {
-                            to: spliced[i].to,
-                            value: this.util.toHuman(spliced[i].value),
-                            coin: "ETH"
-                        },
-                        type:"Transfer",
-                        explorer: this.explorer.transaction(spliced[i].hash)
-                    })
-                }
-
-                resolve(result_obj)
+                resolve(res.result)
             })
             .catch(e => {
                 console.log(e)
-                resolve(Array())
+                reject("error_getting_history")
             })
         })
     }
@@ -149,9 +128,6 @@ export default class Ethereum extends Wrapper {
 
     submitSigned (tx) {
         const emitter = new MyEmitter()
-
-        let returned = false
-
         const resolveOnce = async (receipt) => {
             if (!returned) {
 
@@ -177,7 +153,7 @@ export default class Ethereum extends Wrapper {
             }
         }
 
-        web3.sendSignedTransaction(tx.rawTransaction)
+        web3.eth.sendSignedTransaction("0x"+tx)
         .on('transactionHash', async (hash) => { 
             console.log('transaction sumited to network', hash)
         })

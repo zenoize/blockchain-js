@@ -1,15 +1,10 @@
-// delete global.bitcore
-// import lightwallet from 'eth-lightwallet';
+import lightwallet from 'eth-lightwallet';
 import config from './config';
 import Util from './util';
-// import EthJS from 'ethereumjs-tx/dist/index';
+import EthJS from 'ethereumjs-tx';
 
 import { Accounts } from 'web3-eth-accounts';
-import Eth from 'web3-eth';
-import crypto from 'crypto';
-
-import Web3 from 'web3'
-const web3 = new Web3(new Web3.providers.HttpProvider(config.provider))
+import { Eth } from 'web3-eth';
 
 export default class Wallet {
     constructor () {
@@ -22,40 +17,33 @@ export default class Wallet {
             config.provider,
             null,
         );
-        // this.ethjs = EthJS
-        // console.log(this.ethjs)
+        this.ethjs = EthJS
     }
 
     /**
      * @description will create a new account (wallet)
      */
-    // create () {
-    //     return new Promise(function (resolve, reject) {
-    //         var secretSeed = lightwallet.keystore.generateRandomSeed();
-    
-    //         lightwallet.keystore.createVault({
-    //             password: "password",
-    //             hdPathString: "m/44'/60'/0'/0",
-    //             seedPhrase: secretSeed
-    //         }, function (err, ks) {
-    //             if (err) reject(err);
-    
-    //             ks.keyFromPassword("password", function (err, pwDerivedKey) {
-    //                 if (err) reject(err);
-    
-    //                 ks.generateNewAddress(pwDerivedKey, 1);
-    //                 var addr = ks.getAddresses();
-    //                 var key = ks.exportPrivateKey(addr[0], pwDerivedKey);
-    
-    //                 resolve({ public: addr[0], private: key, seed: secretSeed });
-    //             });
-    //         });
-    //     })
-    // }
     create () {
-        return new Promise(async (resolve, reject) => {
-            const account = await this.accounts.create(crypto.randomBytes(32).toString('hex'))
-            resolve({ public:account.address, private:account.privateKey })
+        return new Promise(function (resolve, reject) {
+            var secretSeed = lightwallet.keystore.generateRandomSeed();
+    
+            lightwallet.keystore.createVault({
+                password: "password",
+                hdPathString: "m/44'/60'/0'/0",
+                seedPhrase: secretSeed
+            }, function (err, ks) {
+                if (err) reject(err);
+    
+                ks.keyFromPassword("password", function (err, pwDerivedKey) {
+                    if (err) reject(err);
+    
+                    ks.generateNewAddress(pwDerivedKey, 1);
+                    var addr = ks.getAddresses();
+                    var key = ks.exportPrivateKey(addr[0], pwDerivedKey);
+    
+                    resolve({ public: addr[0], private: key, seed: secretSeed });
+                });
+            });
         })
     }
 
@@ -79,7 +67,7 @@ export default class Wallet {
         const that = this
         return new Promise(function (resolve, reject) {
             try {
-                var account = that.accounts.privateKeyToAccount(privateKey)
+                var account = that.accounts.privateKeyToAccount("0x" + privateKey)
                 resolve(account.address);
             }
             catch (e) {
@@ -101,13 +89,12 @@ export default class Wallet {
                 const account = await that.getAccount(privatekey)
                 tx.nonce = await that.getNonce(account)
                 
-                // const txobj = new that.ethjs(tx)
-                const signed = await web3.eth.accounts.signTransaction(tx, privatekey)
-                //       txobj.sign(privateBuff)
+                const txobj = new that.ethjs(tx)
+                      txobj.sign(privateBuff)
                       
-                // const hexedTx = txobj.serialize().toString('hex')
+                const hexedTx = txobj.serialize().toString('hex')
 
-                resolve(signed)
+                resolve(hexedTx)
             }
             catch (e) {
                 console.log(e)

@@ -24,7 +24,6 @@ export default class Stellar extends Wrapper {
     getGasPrice () {
         return new Promise(async (resolve, reject) => {
             this.gasPrice = 0.00001
-            this.humanFeeRate = 0.00001
             resolve(0.00001)
         })
     }
@@ -45,8 +44,8 @@ export default class Stellar extends Wrapper {
                 resolve(nativeBalance.toFixed(precession))
             })
             .catch(e => {
-                console.log(e, "error_getting_balance")
-                resolve(0)
+                console.log(e)
+                reject("error_getting_balance")
             })
         })
     }    
@@ -78,30 +77,13 @@ export default class Stellar extends Wrapper {
         return new Promise(async (resolve, reject) => {
             query.get_json(this.api.getHistory(address))
             .then(res => {
-                const list = res._embedded.records.splice(0, 10)
-                const formatedList = []
-
-                for (let i =0; i < list.length; i++) {
-                    if (list[i].type == "payment")
-                        formatedList.push({
-                            hash: list[i].transaction_hash,
-                            type: "Transfer",
-                            from: list[i].from,
-                            timestamp: new Date(list[i].created_at.replace("Z", "")).toUTCString(),
-                            data: {
-                                value: list[i].amount,
-                                to: list[i].to,
-                                coin: (list[i].asset_type != "native") ? list[i].asset_code : "XLM"
-                            },
-                            explorer: this.explorer.transaction(list[i].transaction_hash)
-                        })
-                }
-
-                resolve(formatedList)
+                const list = res._embedded.records
+                
+                resolve(list)
             })
             .catch(e => {
                 console.log(e)
-                resolve(Array())
+                reject("error_getting_history")
             })
         })
     }
@@ -109,8 +91,8 @@ export default class Stellar extends Wrapper {
     payment (to, value) {
         return new Promise(async (resolve, reject) => {
             resolve({
-                to: to,
-                value: (Math.floor(value * 100) / 100).toString(),
+                to:to,
+                value: (Math.floor(value * 100) / 100).toString()
             })
         })
     }
@@ -141,10 +123,8 @@ export default class Stellar extends Wrapper {
             }
             catch (e) {}
         })
-        .catch((error, data) => {
-            console.log(error, data)
-            // if (error.extras.result_codes.operations[0] == "op_no_destination")
-            //     emitter.emitObject("error", {data:"recipient_address_not_exist"})
+        .catch(error => {
+            console.log(error)
 
             emitter.emitObject("error", {data:"error_submiting_transaction"})
         })

@@ -61,7 +61,7 @@ export default class Wrapper {
                 merchant: env.MERCHANT_APIKEY,
                 tx: receipt
             }
-            query.post_json(`${env.ALOBORIO_STATS_ROUTE}/save_tx_stats`, data)
+            query.post_json(`${env.BLOCKPEN_STATS_ROUTE}/save_tx_stats`, data)
         }
         catch (e) {
             console.log(e)

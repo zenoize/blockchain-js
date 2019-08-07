@@ -1,6 +1,6 @@
-
 import socket from 'socket.io-client';
 import Ethereum from './ETHEREUM';
+import Bitcoin from './BITCOIN';
 import Stellar from './STELLAR';
 import Minter from './MINTER';
 
@@ -11,6 +11,7 @@ export default class Blockchain {
         this.supported = ""
         
         this.ETHEREUM = new Ethereum()
+        this.BITCOIN = new Bitcoin()
         this.STELLAR = new Stellar()
         this.MINTER = new Minter()
 
@@ -24,42 +25,5 @@ export default class Blockchain {
             console.log(msg)
             this.supported = msg.data
         })
-    }
-
-    parseHashFromReceipt (blockchain, receipt) {
-        var parseAsEthereum = function (receipt) {
-            var result = {}
-
-            result.hash = receipt.transactionHash
-            
-            return result
-        }
-
-        var parseAsStellar = function (receipt) {
-            var result = {}
-            
-            result.hash = receipt.hash
-
-            return result
-        }
-
-        var parseAsMinter = function (receipt) {
-            var result = {
-                hash: receipt.hash
-            }
-
-            return result
-        }
-
-        switch (blockchain) {
-            case "ETHEREUM":
-                return parseAsEthereum(receipt)
-                break
-            case "STELLAR":
-                return parseAsStellar(receipt)
-                break
-            case "MINTER":
-                return parseAsMinter(receipt)
-        }
     }
 }

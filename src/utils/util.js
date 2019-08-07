@@ -1,9 +1,5 @@
-export function delay (duration) {
-	return function(){
-		return new Promise(function(resolve, reject){
-			setTimeout(function(){
-				resolve();
-			}, duration)
-		});
-	};
-};
+export function delay () {
+    return new Promise(function(resolve) { 
+        setTimeout(resolve.bind(null, v), t)
+    });
+}
