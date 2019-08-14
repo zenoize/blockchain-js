@@ -17,10 +17,10 @@ export default class Ethereum extends Wrapper {
         super({ name:"ETHEREUM", nativeCurrency:"ETH" })
         
         this.explorer = new Explorer()
-        this.util = new EthUtil()
-        this.wallet = new Wallet()
-        this.api = new Api()
-
+        this.util     = new EthUtil()
+        this.wallet   = new Wallet()
+        this.api      = new Api()
+        this.decimals = 18
         this.gasLimit = "0x5208"
 
         this.getGasPrice()

@@ -17,6 +17,7 @@ export default class Stellar extends Wrapper {
         this.util = new XLMUtil()
         this.wallet = new Wallet()
         this.api = new Api()
+        this.decimals = 7
 
         this.getGasPrice()
     }
@@ -78,25 +79,93 @@ export default class Stellar extends Wrapper {
         return new Promise(async (resolve, reject) => {
             query.get_json(this.api.getHistory(address))
             .then(res => {
-                const list = res._embedded.records.splice(0, 10)
                 const formatedList = []
 
-                for (let i =0; i < list.length; i++) {
-                    if (list[i].type == "payment")
-                        formatedList.push({
-                            hash: list[i].transaction_hash,
-                            type: "Transfer",
-                            from: list[i].from,
-                            timestamp: new Date(list[i].created_at.replace("Z", "")).toUTCString(),
-                            data: {
-                                value: list[i].amount,
-                                to: list[i].to,
-                                coin: (list[i].asset_type != "native") ? list[i].asset_code : "XLM"
-                            },
-                            explorer: this.explorer.transaction(list[i].transaction_hash)
-                        })
+                if (res._embedded.records.length == 1) {
+                    const data = res._embedded.records[0]
+                    
+                    formatedList.push({
+                        hash: data.transaction_hash,
+                        type: "Account activation",
+                        from: data.funder,
+                        timestamp: new Date(data.created_at.replace("Z", "")).toUTCString(),
+                        data: {
+                            value: data.starting_balance,
+                            to: data.account,
+                            coin: "XLM"
+                        },
+                        explorer: this.explorer.transaction(data.transaction_hash)
+                    })
+                        
                 }
+                else {
+                    if (res._embedded.records.length <= 10) {
+                        const activation = res._embedded.records[res._embedded.records.length-1]
+                        const list = res._embedded.records.splice(0, res._embedded.records.length-1)
 
+                        for (let i = 0; i < list.length; i++) {
+                            if (list[i].type == "payment")
+                                formatedList.push({
+                                    hash: list[i].transaction_hash,
+                                    type: "Transfer",
+                                    from: list[i].from,
+                                    timestamp: new Date(list[i].created_at.replace("Z", "")).toUTCString(),
+                                    data: {
+                                        value: list[i].amount,
+                                        to: list[i].to,
+                                        coin: (list[i].asset_type != "native") ? list[i].asset_code : "XLM"
+                                    },
+                                    explorer: this.explorer.transaction(list[i].transaction_hash)
+                                })
+                            if (list[i].type == "create_account") {
+                                formatedList.push({
+                                    hash: list[i].transaction_hash,
+                                    type: "Activate external account",
+                                    from: list[i].source_account,
+                                    timestamp: new Date(list[i].created_at.replace("Z", "")).toUTCString(),
+                                    data: {
+                                        value: list[i].starting_balance,
+                                        to: list[i].account,
+                                        coin: "XLM"
+                                    },
+                                    explorer: this.explorer.transaction(list[i].transaction_hash)
+                                })
+                            }
+                        }
+
+                        formatedList.push({
+                            hash: activation.transaction_hash,
+                            type: "Account activation",
+                            from: activation.funder,
+                            timestamp: new Date(activation.created_at.replace("Z", "")).toUTCString(),
+                            data: {
+                                value: activation.starting_balance,
+                                to: activation.account,
+                                coin: "XLM"
+                            },
+                            explorer: this.explorer.transaction(activation.transaction_hash)
+                        })
+                    }
+                    else {
+                        const list = res._embedded.records.splice(0, 10)
+        
+                        for (let i =0; i < list.length; i++) {
+                            if (list[i].type == "payment")
+                                formatedList.push({
+                                    hash: list[i].transaction_hash,
+                                    type: "Transfer",
+                                    from: list[i].from,
+                                    timestamp: new Date(list[i].created_at.replace("Z", "")).toUTCString(),
+                                    data: {
+                                        value: list[i].amount,
+                                        to: list[i].to,
+                                        coin: (list[i].asset_type != "native") ? list[i].asset_code : "XLM"
+                                    },
+                                    explorer: this.explorer.transaction(list[i].transaction_hash)
+                                })
+                        }
+                    }
+                }
                 resolve(formatedList)
             })
             .catch(e => {

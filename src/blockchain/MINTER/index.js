@@ -31,6 +31,7 @@ export default class Minter extends Wrapper {
         this.util     = new MNUtil()
         this.wallet   = new Wallet()
         this.api      = new Api()
+        this.decimals = 18
 
         this.getGasPrice()
     }
@@ -222,7 +223,7 @@ export default class Minter extends Wrapper {
         })
         .catch(error => {
             console.log(error)
-            if (error.response.data.error.tx_result.log.indexOf("Insufficient funds for sender account:") != -1)
+            if (error.response.data.error.log.indexOf("Insufficient funds for sender account:") != -1)
                 emitter.emitObject("error", {data:"not_enought_fund"})
             
             else 
