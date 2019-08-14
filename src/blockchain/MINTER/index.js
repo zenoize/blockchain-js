@@ -209,7 +209,7 @@ export default class Minter extends Wrapper {
             txHash = response
             return
         })
-        .then(delay(5000))
+        .then(delay(7000))
         .then(() => {
             return query.get_json(this.api.getTransaction(txHash))
         })
