@@ -11,7 +11,7 @@ export default class Explorer {
     }
 
     transaction (hash) {
-        return `${this.explorer}/transactions/${hash}`
+        return `${this.explorer}/tx/${hash}`
     }
 
     tokenProfile (address) {

@@ -16,7 +16,7 @@ export default (function () {
     if (env.CRYPTO_NETWORK == 'main') {
         return {
             api: "https://explorer-api.minter.network/api/v1",
-            explorer: "https://explorer.minter.network",
+            explorer: "https://minterscan.net",
             network: "mainnet",
             provider: "https://explorer-api.minter.network/api/v1",
             apikey: "",
