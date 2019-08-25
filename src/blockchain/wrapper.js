@@ -54,17 +54,16 @@ export default class Wrapper {
     saveStats (receipt) {
         try {
             const data = {
-                blockchain: this.name,
-                currency: this.nativeCurrency,
-                type: "payment",
-                isNative: true,
-                merchant: env.MERCHANT_APIKEY,
-                tx: receipt
+              type: "payment",
+              isNative: true,
+              order: "of_app_or_sdk",
+              tx: receipt
             }
-            query.post_json(`${env.ALOBORIO_STATS_ROUTE}/save_tx_stats`, data)
-        }
-        catch (e) {
+            query.post_json(`${env.ALOBORIO_AQR_ROUTE}/setConfirmedOrder`, data)
+          }
+          catch (e) {
             console.log(e)
+          }
         }
     }
 }

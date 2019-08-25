@@ -13,6 +13,7 @@ else {
         STELLAR_CHAINDATA_SERVICE: "https://api.alobor.io/service/stellar/chaindata",
         MINTER_CHAINDATA_SERVICE: "https://api.alobor.io/service/minter/chaindata",
         ALOBORIO_STATS_ROUTE: "https://api.alobor.io/stats",
+        ALOBORIO_AQR_ROUTE: "https://api.alobor.io/aqr",
         MERCHANT_APIKEY: "your_aloborio_commerce_token"
     }
 }
