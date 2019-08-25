@@ -54,16 +54,15 @@ export default class Wrapper {
     saveStats (receipt) {
         try {
             const data = {
-              type: "payment",
-              isNative: true,
-              order: "of_app_or_sdk",
-              tx: receipt
+                type: "payment",
+                isNative: true,
+                order: "of_app_or_sdk",
+                tx: receipt
             }
             query.post_json(`${env.ALOBORIO_AQR_ROUTE}/setConfirmedOrder`, data)
-          }
-          catch (e) {
+        }
+        catch (e) {
             console.log(e)
-          }
         }
     }
 }
